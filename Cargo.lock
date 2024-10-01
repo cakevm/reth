@@ -160,9 +160,9 @@ dependencies = [
 
 [[package]]
 name = "alloy-eip7702"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37d319bb544ca6caeab58c39cea8921c55d924d4f68f2c60f24f914673f9a74a"
+checksum = "ea59dc42102bc9a1905dc57901edc6dd48b9f38115df86c7d252acba70d71d04"
 dependencies = [
  "alloy-primitives",
  "alloy-rlp",
@@ -3560,9 +3560,9 @@ dependencies = [
 
 [[package]]
 name = "httparse"
-version = "1.9.4"
+version = "1.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fcc0b4a115bf80b728eb8ea024ad5bd707b615bfed49e0665b6e0f86fd082d9"
+checksum = "7d71d3574edd2771538b901e6549113b4006ece66150fb69c0fb6d9a2adae946"
 
 [[package]]
 name = "httpdate"
@@ -6101,9 +6101,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.12.7"
+version = "0.12.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8f4955649ef5c38cc7f9e8aa41761d48fb9677197daea9984dc54f56aad5e63"
+checksum = "f713147fbe92361e52392c73b8c9e48c04c6625bce969ef54dc901e58e042a7b"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -6124,7 +6124,7 @@ dependencies = [
  "pin-project-lite",
  "quinn",
  "rustls",
- "rustls-native-certs 0.7.3",
+ "rustls-native-certs 0.8.0",
  "rustls-pemfile",
  "rustls-pki-types",
  "serde",
@@ -6250,7 +6250,7 @@ dependencies = [
  "reth-tokio-util",
  "reth-transaction-pool",
  "reth-trie",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -6274,7 +6274,7 @@ dependencies = [
  "reth-revm",
  "reth-tasks",
  "reth-transaction-pool",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "tokio",
  "tracing",
 ]
@@ -6437,7 +6437,7 @@ dependencies = [
  "reth-primitives",
  "reth-storage-api",
  "reth-trie",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -6633,7 +6633,7 @@ dependencies = [
  "reth-consensus",
  "reth-primitives",
  "reth-storage-api",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
 ]
 
 [[package]]
@@ -7093,7 +7093,7 @@ dependencies = [
  "reth-revm",
  "reth-rpc-types-compat",
  "reth-trie",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "serde",
  "serde_json",
  "tokio",
@@ -7253,8 +7253,8 @@ dependencies = [
  "reth-revm",
  "reth-transaction-pool",
  "reth-trie",
- "revm",
- "revm-primitives",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "tracing",
 ]
 
@@ -7286,8 +7286,8 @@ dependencies = [
  "reth-primitives-traits",
  "reth-prune-types",
  "reth-storage-errors",
- "revm",
- "revm-primitives",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
 ]
 
 [[package]]
@@ -7308,7 +7308,7 @@ dependencies = [
  "reth-prune-types",
  "reth-revm",
  "reth-testing-utils",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "secp256k1",
  "serde_json",
 ]
@@ -7325,7 +7325,7 @@ dependencies = [
  "reth-consensus",
  "reth-prune-types",
  "reth-storage-errors",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
 ]
 
 [[package]]
@@ -7340,7 +7340,7 @@ dependencies = [
  "reth-execution-errors",
  "reth-primitives",
  "reth-trie",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "serde",
  "serde_with",
 ]
@@ -8027,8 +8027,8 @@ dependencies = [
  "reth-primitives",
  "reth-prune-types",
  "reth-revm",
- "revm",
- "revm-primitives",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "thiserror",
  "tracing",
 ]
@@ -8123,8 +8123,8 @@ dependencies = [
  "reth-rpc-types-compat",
  "reth-transaction-pool",
  "reth-trie",
- "revm",
- "revm-primitives",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "sha2 0.10.8",
  "thiserror",
  "tracing",
@@ -8171,7 +8171,7 @@ dependencies = [
  "reth-rpc-server-types",
  "reth-tasks",
  "reth-transaction-pool",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "serde_json",
  "thiserror",
  "tokio",
@@ -8204,7 +8204,7 @@ dependencies = [
  "reth-payload-primitives",
  "reth-primitives",
  "reth-provider",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "tokio",
  "tokio-stream",
  "tracing",
@@ -8277,7 +8277,7 @@ dependencies = [
  "reth-static-file-types",
  "reth-testing-utils",
  "reth-trie-common",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "secp256k1",
  "serde",
  "serde_json",
@@ -8306,7 +8306,7 @@ dependencies = [
  "rand 0.8.5",
  "reth-codecs",
  "reth-testing-utils",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "roaring",
  "serde",
  "serde_json",
@@ -8357,7 +8357,7 @@ dependencies = [
  "reth-testing-utils",
  "reth-trie",
  "reth-trie-db",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "strum",
  "tempfile",
  "tokio",
@@ -8427,7 +8427,7 @@ dependencies = [
  "reth-storage-api",
  "reth-storage-errors",
  "reth-trie",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
 ]
 
 [[package]]
@@ -8485,9 +8485,9 @@ dependencies = [
  "reth-testing-utils",
  "reth-transaction-pool",
  "reth-trie",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "revm-inspectors",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "serde",
  "serde_json",
  "thiserror",
@@ -8665,9 +8665,9 @@ dependencies = [
  "reth-tasks",
  "reth-transaction-pool",
  "reth-trie",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "revm-inspectors",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "tokio",
  "tracing",
 ]
@@ -8704,9 +8704,9 @@ dependencies = [
  "reth-tasks",
  "reth-transaction-pool",
  "reth-trie",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "revm-inspectors",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "schnellru",
  "serde",
  "serde_json",
@@ -9014,7 +9014,7 @@ dependencies = [
  "reth-storage-api",
  "reth-tasks",
  "reth-tracing",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "rustc-hash 2.0.0",
  "schnellru",
  "serde",
@@ -9048,7 +9048,7 @@ dependencies = [
  "reth-stages-types",
  "reth-storage-errors",
  "reth-trie-common",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "serde",
  "serde_json",
  "tokio",
@@ -9076,7 +9076,7 @@ dependencies = [
  "proptest-arbitrary-interop",
  "reth-codecs",
  "reth-primitives-traits",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "serde",
 ]
 
@@ -9105,7 +9105,7 @@ dependencies = [
  "reth-storage-errors",
  "reth-trie",
  "reth-trie-common",
- "revm",
+ "revm 14.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "serde",
  "serde_json",
  "similar-asserts",
@@ -9151,8 +9151,22 @@ dependencies = [
  "auto_impl",
  "cfg-if",
  "dyn-clone",
- "revm-interpreter",
- "revm-precompile",
+ "revm-interpreter 10.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "revm-precompile 11.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "revm"
+version = "14.0.3"
+source = "git+https://github.com/cakevm/revm?branch=alloy-4#cec8f032660a47152e7fafba6a3dc42769582907"
+dependencies = [
+ "auto_impl",
+ "cfg-if",
+ "dyn-clone",
+ "revm-interpreter 10.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
+ "revm-precompile 11.0.3 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "serde",
  "serde_json",
 ]
@@ -9171,7 +9185,7 @@ dependencies = [
  "boa_engine",
  "boa_gc",
  "colorchoice",
- "revm",
+ "revm 14.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json",
  "thiserror",
 ]
@@ -9182,7 +9196,16 @@ version = "10.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e5e14002afae20b5bf1566f22316122f42f57517000e559c55b25bf7a49cba2"
 dependencies = [
- "revm-primitives",
+ "revm-primitives 10.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde",
+]
+
+[[package]]
+name = "revm-interpreter"
+version = "10.0.3"
+source = "git+https://github.com/cakevm/revm?branch=alloy-4#cec8f032660a47152e7fafba6a3dc42769582907"
+dependencies = [
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "serde",
 ]
 
@@ -9193,13 +9216,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3198c06247e8d4ad0d1312591edf049b0de4ddffa9fecb625c318fd67db8639b"
 dependencies = [
  "aurora-engine-modexp",
+ "c-kzg",
+ "cfg-if",
+ "k256",
+ "once_cell",
+ "revm-primitives 10.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ripemd",
+ "secp256k1",
+ "sha2 0.10.8",
+ "substrate-bn",
+]
+
+[[package]]
+name = "revm-precompile"
+version = "11.0.3"
+source = "git+https://github.com/cakevm/revm?branch=alloy-4#cec8f032660a47152e7fafba6a3dc42769582907"
+dependencies = [
+ "aurora-engine-modexp",
  "blst",
  "c-kzg",
  "cfg-if",
  "k256",
  "once_cell",
  "p256",
- "revm-primitives",
+ "revm-primitives 10.0.0 (git+https://github.com/cakevm/revm?branch=alloy-4)",
  "ripemd",
  "secp256k1",
  "sha2 0.10.8",
@@ -9211,6 +9251,24 @@ name = "revm-primitives"
 version = "10.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6f1525851a03aff9a9d6a1d018b414d76252d6802ab54695b27093ecd7e7a101"
+dependencies = [
+ "alloy-eip2930",
+ "alloy-eip7702",
+ "alloy-primitives",
+ "auto_impl",
+ "bitflags 2.6.0",
+ "bitvec",
+ "cfg-if",
+ "dyn-clone",
+ "enumn",
+ "hex",
+ "serde",
+]
+
+[[package]]
+name = "revm-primitives"
+version = "10.0.0"
+source = "git+https://github.com/cakevm/revm?branch=alloy-4#cec8f032660a47152e7fafba6a3dc42769582907"
 dependencies = [
  "alloy-eip2930",
  "alloy-eip7702",
@@ -9451,11 +9509,10 @@ dependencies = [
 
 [[package]]
 name = "rustls-pemfile"
-version = "2.1.3"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "196fe16b00e106300d3e45ecfcb764fa292a535d7326a29a5875c579c7417425"
+checksum = "dce314e5fee3f39953d46bb63bb8a46d40c2f8fb7cc5a3b6cab2bde9721d6e50"
 dependencies = [
- "base64 0.22.1",
  "rustls-pki-types",
 ]
 
@@ -9544,9 +9601,9 @@ dependencies = [
 
 [[package]]
 name = "scc"
-version = "2.1.18"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "215b1103f73e23e9cb6883072c1fb26ae55c09d42054654955c739e5418a7c96"
+checksum = "836f1e0f4963ef5288b539b643b35e043e76a32d0f4e47e67febf69576527f50"
 dependencies = [
  "sdd",
 ]
