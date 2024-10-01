@@ -413,7 +413,7 @@ revm = { git = "https://github.com/cakevm/revm", branch = "alloy-4", features = 
     "secp256k1",
     "blst",
 ], default-features = false }
-revm-inspectors = "0.8.1"
+revm-inspectors = { git = "https://github.com/cakevm/revm-inspectors", branch = "alloy-4" }
 revm-primitives = { git = "https://github.com/cakevm/revm", branch = "alloy-4", features = [
     "std",
 ], default-features = false }
