@@ -21,4 +21,4 @@ pub const GAS_LIMIT_BOUND_DIVISOR: u64 = 1024;
 ///
 /// Unwind depth of `3` blocks significantly reduces the chance that the reorged block is kept in
 /// the database.
-pub const BEACON_CONSENSUS_REORG_UNWIND_DEPTH: u64 = 3;
+pub const BEACON_CONSENSUS_REORG_UNWIND_DEPTH: u64 = 48;
