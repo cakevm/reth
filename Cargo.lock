@@ -4047,14 +4047,13 @@ dependencies = [
 
 [[package]]
 name = "hickory-proto"
-version = "0.25.0"
+version = "0.25.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6b7da8437d2ae940a7538cee81a7edcda0c757cc9a9faecd6a95ab9ee6451b8"
+checksum = "1d00147af6310f4392a31680db52a3ed45a2e0f68eb18e8c3fe5537ecc96d9e2"
 dependencies = [
  "async-recursion",
  "async-trait",
  "cfg-if",
- "critical-section",
  "data-encoding",
  "enum-as-inner",
  "futures-channel",
@@ -4064,7 +4063,6 @@ dependencies = [
  "ipnet",
  "once_cell",
  "rand 0.9.0",
- "ring",
  "serde",
  "thiserror 2.0.12",
  "tinyvec",
@@ -4075,9 +4073,9 @@ dependencies = [
 
 [[package]]
 name = "hickory-resolver"
-version = "0.25.0"
+version = "0.25.0-alpha.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56910eb43705be78b1ebc4a8f632fce9ff377c5b66ec5c280e079bf10e99915f"
+checksum = "5762f69ebdbd4ddb2e975cd24690bf21fe6b2604039189c26acddbc427f12887"
 dependencies = [
  "cfg-if",
  "futures-util",
