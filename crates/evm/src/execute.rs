@@ -281,6 +281,21 @@ where
     pub(crate) assembler: Builder,
 }
 
+impl<'a, F, Executor, Builder, N> BasicBlockBuilder<'a, F, Executor, Builder, N>
+where
+    F: BlockExecutorFactory,
+    N: NodePrimitives,
+{
+    pub fn new(
+        executor: Executor,
+        ctx: F::ExecutionCtx<'a>,
+        parent: &'a SealedHeader<HeaderTy<N>>,
+        assembler: Builder,
+    ) -> Self {
+        Self { executor, transactions: Vec::new(), ctx, parent, assembler }
+    }
+}
+
 impl<'a, F, DB, Executor, Builder, N> BlockBuilder
     for BasicBlockBuilder<'a, F, Executor, Builder, N>
 where
