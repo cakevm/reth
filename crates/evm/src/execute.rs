@@ -270,7 +270,7 @@ pub trait BlockBuilder {
     fn into_executor(self) -> Self::Executor;
 }
 
-pub(crate) struct BasicBlockBuilder<'a, F, Executor, Builder, N: NodePrimitives>
+pub struct BasicBlockBuilder<'a, F, Executor, Builder, N: NodePrimitives>
 where
     F: BlockExecutorFactory,
 {

@@ -17,13 +17,12 @@
 
 extern crate alloc;
 
-use crate::execute::BasicBlockBuilder;
 use alloc::vec::Vec;
 use alloy_eips::{eip2930::AccessList, eip4895::Withdrawals};
 use alloy_evm::block::{BlockExecutorFactory, BlockExecutorFor};
 use alloy_primitives::{Address, B256};
 use core::{error::Error, fmt::Debug};
-use execute::{BlockAssembler, BlockBuilder};
+use execute::{BlockAssembler, BlockBuilder, BasicBlockBuilder};
 use reth_primitives_traits::{
     BlockTy, HeaderTy, NodePrimitives, ReceiptTy, SealedBlock, SealedHeader, TxTy,
 };
