@@ -24,8 +24,10 @@ const TX_POOL_EVENT_CHANNEL_SIZE: usize = 1024;
 #[derive(Debug)]
 #[must_use = "streams do nothing unless polled"]
 pub struct TransactionEvents {
-    hash: TxHash,
-    events: UnboundedReceiver<TransactionEvent>,
+    /// The hash for this transaction
+    pub hash: TxHash,
+    /// The stream of events for this transaction
+    pub events: UnboundedReceiver<TransactionEvent>,
 }
 
 impl TransactionEvents {

@@ -1367,8 +1367,8 @@ pub struct PoolSize {
 
 impl PoolSize {
     /// Asserts that the invariants of the pool size are met.
-    #[cfg(test)]
-    pub(crate) fn assert_invariants(&self) {
+    #[cfg(any(test, feature = "test-utils"))]
+    pub fn assert_invariants(&self) {
         assert_eq!(self.total, self.pending + self.basefee + self.queued + self.blob);
     }
 }

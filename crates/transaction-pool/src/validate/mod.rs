@@ -299,12 +299,12 @@ impl<T: PoolTransaction> ValidPoolTransaction<T> {
     }
 
     /// Returns the internal identifier for the sender of this transaction
-    pub(crate) const fn sender_id(&self) -> SenderId {
+    pub const fn sender_id(&self) -> SenderId {
         self.transaction_id.sender
     }
 
     /// Returns the internal identifier for this transaction.
-    pub(crate) const fn id(&self) -> &TransactionId {
+    pub const fn id(&self) -> &TransactionId {
         &self.transaction_id
     }
 
@@ -372,7 +372,7 @@ impl<T: PoolTransaction> ValidPoolTransaction<T> {
     }
 
     /// The heap allocated size of this transaction.
-    pub(crate) fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.transaction.size()
     }
 
@@ -382,7 +382,7 @@ impl<T: PoolTransaction> ValidPoolTransaction<T> {
     /// Returns true if the transaction is an EIP-4844 blob transaction and the other is not, or
     /// vice versa.
     #[inline]
-    pub(crate) fn tx_type_conflicts_with(&self, other: &Self) -> bool {
+    pub fn tx_type_conflicts_with(&self, other: &Self) -> bool {
         self.is_eip4844() != other.is_eip4844()
     }
 
@@ -400,11 +400,7 @@ impl<T: PoolTransaction> ValidPoolTransaction<T> {
     /// This applies to both standard gas fees and, for blob-carrying transactions (EIP-4844),
     /// the blob-specific fees.
     #[inline]
-    pub(crate) fn is_underpriced(
-        &self,
-        maybe_replacement: &Self,
-        price_bumps: &PriceBumpConfig,
-    ) -> bool {
+    pub fn is_underpriced(&self, maybe_replacement: &Self, price_bumps: &PriceBumpConfig) -> bool {
         // Retrieve the required price bump percentage for this type of transaction.
         //
         // The bump is different for EIP-4844 and other transactions. See `PriceBumpConfig`.
@@ -445,7 +441,7 @@ impl<T: PoolTransaction> ValidPoolTransaction<T> {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "test-utils"))]
 impl<T: PoolTransaction> Clone for ValidPoolTransaction<T> {
     fn clone(&self) -> Self {
         Self {
