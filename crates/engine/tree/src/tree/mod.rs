@@ -2231,7 +2231,7 @@ where
             self.on_invalid_block(&parent_block, &block, &output, Some((&trie_output, state_root)));
             return Err((
                 ConsensusError::BodyStateRootDiff(
-                    GotExpected { got: state_root, expected: block.header().state_root() }.into(),
+                    GotExpected { got: block.header().state_root(), expected: state_root }.into(),
                 )
                 .into(),
                 block,
