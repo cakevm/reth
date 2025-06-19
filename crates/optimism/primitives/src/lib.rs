@@ -20,6 +20,12 @@ pub mod transaction;
 pub use transaction::*;
 
 mod receipt;
+
+#[cfg(feature = "rpc-compat")]
+mod rpc;
+#[cfg(feature = "rpc-compat")]
+pub use rpc::OpBlockWrapper;
+
 pub use receipt::{DepositReceipt, OpReceipt};
 
 /// Optimism-specific block type.

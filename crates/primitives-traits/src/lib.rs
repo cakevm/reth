@@ -147,6 +147,11 @@ pub use block::{
     Block, FullBlock, RecoveredBlock, SealedBlock,
 };
 
+#[cfg(feature = "rpc-compat")]
+mod rpc;
+#[cfg(feature = "rpc-compat")]
+pub use rpc::{NoopConversionError, TryFromBlockResponse};
+
 mod withdrawal;
 pub use alloy_eips::eip2718::WithEncoded;
 

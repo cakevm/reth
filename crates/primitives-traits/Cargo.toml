@@ -51,6 +51,7 @@ proptest = { workspace = true, optional = true }
 proptest-arbitrary-interop = { workspace = true, optional = true }
 rayon = { workspace = true, optional = true }
 alloy-rpc-types-eth = { workspace = true, optional = true }
+alloy-network = { workspace = true, optional = true }
 
 [dev-dependencies]
 reth-codecs.workspace = true
@@ -157,4 +158,4 @@ op = [
 rayon = [
     "dep:rayon",
 ]
-rpc-compat = ["alloy-rpc-types-eth"]
+rpc-compat = ["alloy-rpc-types-eth", "alloy-network"]

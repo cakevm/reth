@@ -1,62 +1,11 @@
 use super::LaunchNode;
-use crate::{rpc::RethRpcAddOns, EngineNodeLauncher, Node, NodeHandle};
+use crate::{rpc::RethRpcAddOns, EngineNodeLauncher, NodeHandle};
 use alloy_provider::network::AnyNetwork;
-use jsonrpsee::core::{DeserializeOwned, Serialize};
 use reth_chainspec::EthChainSpec;
 use reth_consensus_debug_client::{DebugConsensusClient, EtherscanBlockProvider, RpcBlockProvider};
-use reth_node_api::{BlockTy, FullNodeComponents};
+use reth_node_api::FullNodeComponents;
 use std::sync::Arc;
 use tracing::info;
-
-/// [`Node`] extension with support for debugging utilities.
-///
-/// This trait provides additional necessary conversion from RPC block type to the node's
-/// primitive block type, e.g. `alloy_rpc_types_eth::Block` to the node's internal block
-/// representation.
-///
-/// This is used in conjunction with the [`DebugNodeLauncher`] to enable debugging features such as:
-///
-/// - **Etherscan Integration**: Use Etherscan as a consensus client to follow the chain and submit
-///   blocks to the local engine.
-/// - **RPC Consensus Client**: Connect to an external RPC endpoint to fetch blocks and submit them
-///   to the local engine to follow the chain.
-///
-/// See [`DebugNodeLauncher`] for the launcher that enables these features.
-///
-/// # Implementation
-///
-/// To implement this trait, you need to:
-/// 1. Define the RPC block type (typically `alloy_rpc_types_eth::Block`)
-/// 2. Implement the conversion from RPC format to your primitive block type
-///
-/// # Example
-///
-/// ```ignore
-/// impl<N: FullNodeComponents<Types = Self>> DebugNode<N> for MyNode {
-///     type RpcBlock = alloy_rpc_types_eth::Block;
-///
-///     fn rpc_to_primitive_block(rpc_block: Self::RpcBlock) -> BlockTy<Self> {
-///         // Convert from RPC format to primitive format by converting the transactions
-///         rpc_block.into_consensus().convert_transactions()
-///     }
-/// }
-/// ```
-pub trait DebugNode<N: FullNodeComponents>: Node<N> {
-    /// RPC block type. Used by [`DebugConsensusClient`] to fetch blocks and submit them to the
-    /// engine. This is intended to match the block format returned by the external RPC endpoint.
-    type RpcBlock: Serialize + DeserializeOwned + 'static;
-
-    /// Converts an RPC block to a primitive block.
-    ///
-    /// This method handles the conversion between the RPC block format and the internal primitive
-    /// block format used by the node's consensus engine.
-    ///
-    /// # Example
-    ///
-    /// For Ethereum nodes, this typically converts from `alloy_rpc_types_eth::Block`
-    /// to the node's internal block representation.
-    fn rpc_to_primitive_block(rpc_block: Self::RpcBlock) -> BlockTy<Self>;
-}
 
 /// Node launcher with support for launching various debugging utilities.
 ///
@@ -93,7 +42,7 @@ impl<L> DebugNodeLauncher<L> {
 
 impl<L, Target, N, AddOns> LaunchNode<Target> for DebugNodeLauncher<L>
 where
-    N: FullNodeComponents<Types: DebugNode<N>>,
+    N: FullNodeComponents,
     AddOns: RethRpcAddOns<N>,
     L: LaunchNode<Target, Node = NodeHandle<N, AddOns>>,
 {
@@ -106,13 +55,24 @@ where
         if let Some(ws_url) = config.debug.rpc_consensus_ws.clone() {
             info!(target: "reth::cli", "Using RPC WebSocket consensus client: {}", ws_url);
 
-            let block_provider =
-                RpcBlockProvider::<AnyNetwork, _>::new(ws_url.as_str(), |block_response| {
+            // Create a block provider that works with the debug consensus client
+            // Note: This is a simplified implementation that assumes Ethereum-style blocks
+            // TODO: Use the new TryFromBlockResponse trait once the debug client is updated
+            let block_provider: RpcBlockProvider<AnyNetwork, _> =
+                RpcBlockProvider::new(ws_url.as_str(), |block_response| {
+                    // Convert through JSON for compatibility - this preserves the old behavior
                     let json = serde_json::to_value(block_response)
                         .expect("Block serialization cannot fail");
-                    let rpc_block =
+                    let rpc_block: alloy_rpc_types::Block =
                         serde_json::from_value(json).expect("Block deserialization cannot fail");
-                    N::Types::rpc_to_primitive_block(rpc_block)
+                    let consensus_block: alloy_consensus::Block<alloy_consensus::TxEnvelope> =
+                        rpc_block.into_consensus().convert_transactions();
+
+                    // Convert to the node's specific block type through JSON serialization
+                    let block_json = serde_json::to_value(&consensus_block)
+                        .expect("Block serialization cannot fail");
+                    serde_json::from_value(block_json)
+                        .expect("Block deserialization to node type cannot fail")
                 })
                 .await?;
 
@@ -138,6 +98,8 @@ where
                     .ok_or_else(|| eyre::eyre!("failed to get etherscan url for chain: {chain}"))
             })?;
 
+            // Create an Etherscan block provider that works with the debug consensus client
+            // TODO: Use the new TryFromBlockResponse trait once the debug client is updated
             let block_provider = EtherscanBlockProvider::new(
                 etherscan_url,
                 chain.etherscan_api_key().ok_or_else(|| {
@@ -145,7 +107,18 @@ where
                         "etherscan api key not found for rpc consensus client for chain: {chain}"
                     )
                 })?,
-                N::Types::rpc_to_primitive_block,
+                |rpc_block: alloy_rpc_types::Block| {
+                    // For Etherscan, we directly convert the RPC block since it's not from an alloy
+                    // network response This preserves the old behavior for now
+                    let consensus_block: alloy_consensus::Block<alloy_consensus::TxEnvelope> =
+                        rpc_block.into_consensus().convert_transactions();
+
+                    // Convert to the node's specific block type through JSON serialization
+                    let block_json = serde_json::to_value(&consensus_block)
+                        .expect("Block serialization cannot fail");
+                    serde_json::from_value(block_json)
+                        .expect("Block deserialization to node type cannot fail")
+                },
             );
             let rpc_consensus_client = DebugConsensusClient::new(
                 handle.node.add_ons_handle.beacon_engine_handle.clone(),

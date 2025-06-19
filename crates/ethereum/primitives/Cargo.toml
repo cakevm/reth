@@ -20,13 +20,16 @@ reth-zstd-compressors = { workspace = true, optional = true }
 # ethereum
 alloy-eips = { workspace = true, features = ["k256"] }
 alloy-primitives.workspace = true
-alloy-consensus = { workspace = true, features = ["serde"] }
+alloy-consensus.workspace = true
 alloy-rlp.workspace = true
+alloy-network = { workspace = true, optional = true }
+alloy-rpc-types-eth = { workspace = true, optional = true}
 
 # misc
 arbitrary = { workspace = true, optional = true, features = ["derive"] }
 modular-bitfield = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
 serde_with = { workspace = true, optional = true }
 
 [dev-dependencies]
@@ -92,4 +95,10 @@ serde = [
     "rand/serde",
     "rand_08/serde",
     "secp256k1/serde",
+]
+rpc-compat = [
+    "dep:alloy-rpc-types-eth",
+    "alloy-network",
+    "serde_json",
+    "reth-primitives-traits/rpc-compat",
 ]

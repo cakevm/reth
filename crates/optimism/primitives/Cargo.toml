@@ -22,14 +22,18 @@ alloy-primitives.workspace = true
 alloy-consensus.workspace = true
 alloy-eips.workspace = true
 alloy-rlp.workspace = true
+alloy-network = { workspace = true, optional = true }
+alloy-rpc-types-eth = { workspace = true, optional = true }
 
 # op
 op-alloy-consensus.workspace = true
+op-alloy-network = { workspace = true, optional = true }
 
 # codec
 bytes = { workspace = true, optional = true }
 modular-bitfield = { workspace = true, optional = true }
 serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
 serde_with = { workspace = true, optional = true }
 
 # test
@@ -106,4 +110,11 @@ arbitrary = [
     "alloy-consensus/arbitrary",
     "alloy-primitives/arbitrary",
     "alloy-eips/arbitrary",
+]
+rpc-compat = [
+    "dep:alloy-rpc-types-eth",
+    "dep:op-alloy-network",
+    "alloy-network",
+    "dep:serde_json",
+    "reth-primitives-traits/rpc-compat",
 ]
