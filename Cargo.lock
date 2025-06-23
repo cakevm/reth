@@ -5515,12 +5515,10 @@ dependencies = [
 [[package]]
 name = "metrics-derive"
 version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3dbdd96ed57d565ec744cba02862d707acf373c5772d152abae6ec5c4e24f6c"
+source = "git+https://github.com/cakevm/metrics-derive?rev=cba7c61#cba7c610680e03a6d0e3661057cfdd7fd00a90f2"
 dependencies = [
  "proc-macro2",
  "quote",
- "regex",
  "syn 2.0.104",
 ]
 
