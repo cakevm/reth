@@ -98,7 +98,7 @@ pub use eth::EthHandlers;
 
 // Rpc server metrics
 mod metrics;
-use crate::middleware::RethRpcMiddleware;
+use crate::middleware::{RethHttpMiddleware, RethRpcMiddleware};
 pub use metrics::{MeteredRequestFuture, RpcRequestMetricsService};
 use reth_chain_state::CanonStateSubscriptions;
 use reth_rpc::eth::sim_bundle::EthSimBundle;
@@ -1016,7 +1016,7 @@ where
 /// Once the [`RpcModule`] is built via [`RpcModuleBuilder`] the servers can be started, See also
 /// [`ServerBuilder::build`] and [`Server::start`](jsonrpsee::server::Server::start).
 #[derive(Debug)]
-pub struct RpcServerConfig<RpcMiddleware = Identity> {
+pub struct RpcServerConfig<RpcMiddleware = Identity, HttpMiddleware = Identity> {
     /// Configs for JSON-RPC Http.
     http_server_config: Option<ServerConfigBuilder>,
     /// Allowed CORS Domains for http
@@ -1039,11 +1039,13 @@ pub struct RpcServerConfig<RpcMiddleware = Identity> {
     jwt_secret: Option<JwtSecret>,
     /// Configurable RPC middleware
     rpc_middleware: RpcMiddleware,
+    /// Configurable HTTP middleware
+    http_middleware: HttpMiddleware,
 }
 
 // === impl RpcServerConfig ===
 
-impl Default for RpcServerConfig<Identity> {
+impl Default for RpcServerConfig<Identity, Identity> {
     /// Create a new config instance
     fn default() -> Self {
         Self {
@@ -1058,11 +1060,12 @@ impl Default for RpcServerConfig<Identity> {
             ipc_endpoint: None,
             jwt_secret: None,
             rpc_middleware: Default::default(),
+            http_middleware: Default::default(),
         }
     }
 }
 
-impl RpcServerConfig {
+impl RpcServerConfig<Identity, Identity> {
     /// Creates a new config with only http set
     pub fn http(config: ServerConfigBuilder) -> Self {
         Self::default().with_http(config)
@@ -1107,9 +1110,9 @@ impl RpcServerConfig {
     }
 }
 
-impl<RpcMiddleware> RpcServerConfig<RpcMiddleware> {
+impl<RpcMiddleware, HttpMiddleware: Clone> RpcServerConfig<RpcMiddleware, HttpMiddleware> {
     /// Configure rpc middleware
-    pub fn set_rpc_middleware<T>(self, rpc_middleware: T) -> RpcServerConfig<T> {
+    pub fn set_rpc_middleware<T>(self, rpc_middleware: T) -> RpcServerConfig<T, HttpMiddleware> {
         RpcServerConfig {
             http_server_config: self.http_server_config,
             http_cors_domains: self.http_cors_domains,
@@ -1122,6 +1125,25 @@ impl<RpcMiddleware> RpcServerConfig<RpcMiddleware> {
             ipc_endpoint: self.ipc_endpoint,
             jwt_secret: self.jwt_secret,
             rpc_middleware,
+            http_middleware: self.http_middleware,
+        }
+    }
+
+    /// Configure http middleware
+    pub fn set_http_middleware<T>(self, http_middleware: T) -> RpcServerConfig<RpcMiddleware, T> {
+        RpcServerConfig {
+            http_server_config: self.http_server_config,
+            http_cors_domains: self.http_cors_domains,
+            http_addr: self.http_addr,
+            http_disable_compression: self.http_disable_compression,
+            ws_server_config: self.ws_server_config,
+            ws_cors_domains: self.ws_cors_domains,
+            ws_addr: self.ws_addr,
+            ipc_server_config: self.ipc_server_config,
+            ipc_endpoint: self.ipc_endpoint,
+            jwt_secret: self.jwt_secret,
+            rpc_middleware: self.rpc_middleware,
+            http_middleware,
         }
     }
 
@@ -1269,6 +1291,12 @@ impl<RpcMiddleware> RpcServerConfig<RpcMiddleware> {
     pub async fn start(self, modules: &TransportRpcModules) -> Result<RpcServerHandle, RpcError>
     where
         RpcMiddleware: RethRpcMiddleware,
+        HttpMiddleware: RethHttpMiddleware<RpcMiddleware>,
+        <<HttpMiddleware as tower::Layer<
+            jsonrpsee::server::TowerServiceNoHttp<
+                Stack<RpcMiddleware, Stack<RpcRequestMetrics, Identity>>,
+            >,
+        >>::Service as tower::Service<jsonrpsee::server::HttpRequest>>::Future: Send,
     {
         let mut http_handle = None;
         let mut ws_handle = None;
@@ -1326,7 +1354,8 @@ impl<RpcMiddleware> RpcServerConfig<RpcMiddleware> {
                             .option_layer(Self::maybe_jwt_layer(self.jwt_secret))
                             .option_layer(Self::maybe_compression_layer(
                                 self.http_disable_compression,
-                            )),
+                            ))
+                            .layer(self.http_middleware.clone()),
                     )
                     .set_rpc_middleware(
                         RpcServiceBuilder::default()
@@ -1377,7 +1406,8 @@ impl<RpcMiddleware> RpcServerConfig<RpcMiddleware> {
                 .set_http_middleware(
                     tower::ServiceBuilder::new()
                         .option_layer(Self::maybe_cors_layer(self.ws_cors_domains.clone())?)
-                        .option_layer(Self::maybe_jwt_layer(self.jwt_secret)),
+                        .option_layer(Self::maybe_jwt_layer(self.jwt_secret))
+                        .layer(self.http_middleware.clone()),
                 )
                 .set_rpc_middleware(
                     RpcServiceBuilder::default()
@@ -1403,7 +1433,8 @@ impl<RpcMiddleware> RpcServerConfig<RpcMiddleware> {
                     tower::ServiceBuilder::new()
                         .option_layer(Self::maybe_cors_layer(self.http_cors_domains.clone())?)
                         .option_layer(Self::maybe_jwt_layer(self.jwt_secret))
-                        .option_layer(Self::maybe_compression_layer(self.http_disable_compression)),
+                        .option_layer(Self::maybe_compression_layer(self.http_disable_compression))
+                        .layer(self.http_middleware.clone()),
                 )
                 .set_rpc_middleware(
                     RpcServiceBuilder::default()

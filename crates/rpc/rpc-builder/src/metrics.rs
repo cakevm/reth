@@ -26,7 +26,7 @@ use tower::Layer;
 /// - Request metrics: metrics for each RPC method (e.g. number of calls started, time taken to
 ///   process a call)
 #[derive(Default, Debug, Clone)]
-pub(crate) struct RpcRequestMetrics {
+pub struct RpcRequestMetrics {
     inner: Arc<RpcServerMetricsInner>,
 }
 

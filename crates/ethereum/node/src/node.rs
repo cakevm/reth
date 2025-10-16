@@ -41,7 +41,10 @@ use reth_rpc::{
     ValidationApi,
 };
 use reth_rpc_api::servers::BlockSubmissionValidationApiServer;
-use reth_rpc_builder::{config::RethRpcServerConfig, middleware::RethRpcMiddleware};
+use reth_rpc_builder::{
+    config::RethRpcServerConfig,
+    middleware::{RethHttpMiddleware, RethRpcMiddleware},
+};
 use reth_rpc_eth_api::{
     helpers::{
         config::{EthConfigApiServer, EthConfigHandler},
@@ -180,17 +183,21 @@ pub struct EthereumAddOns<
     EB = BasicEngineApiBuilder<PVB>,
     EVB = BasicEngineValidatorBuilder<PVB>,
     RpcMiddleware = Identity,
+    HttpMiddleware = Identity,
 > {
-    inner: RpcAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>,
+    inner: RpcAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>,
 }
 
-impl<N, EthB, PVB, EB, EVB, RpcMiddleware> EthereumAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>
+impl<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
+    EthereumAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
 where
     N: FullNodeComponents,
     EthB: EthApiBuilder<N>,
 {
     /// Creates a new instance from the inner `RpcAddOns`.
-    pub const fn new(inner: RpcAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>) -> Self {
+    pub const fn new(
+        inner: RpcAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>,
+    ) -> Self {
         Self { inner }
     }
 }
@@ -208,7 +215,7 @@ where
     EthereumEthApiBuilder: EthApiBuilder<N>,
 {
     fn default() -> Self {
-        Self::new(RpcAddOns::new(
+        Self::new(RpcAddOns::<N, _, _, _, _, _, Identity>::new(
             EthereumEthApiBuilder::default(),
             EthereumEngineValidatorBuilder::default(),
             BasicEngineApiBuilder::default(),
@@ -218,7 +225,8 @@ where
     }
 }
 
-impl<N, EthB, PVB, EB, EVB, RpcMiddleware> EthereumAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>
+impl<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
+    EthereumAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
 where
     N: FullNodeComponents,
     EthB: EthApiBuilder<N>,
@@ -227,7 +235,7 @@ where
     pub fn with_engine_api<T>(
         self,
         engine_api_builder: T,
-    ) -> EthereumAddOns<N, EthB, PVB, T, EVB, RpcMiddleware>
+    ) -> EthereumAddOns<N, EthB, PVB, T, EVB, RpcMiddleware, HttpMiddleware>
     where
         T: Send,
     {
@@ -239,7 +247,7 @@ where
     pub fn with_payload_validator<V, T>(
         self,
         payload_validator_builder: T,
-    ) -> EthereumAddOns<N, EthB, T, EB, EVB, RpcMiddleware> {
+    ) -> EthereumAddOns<N, EthB, T, EB, EVB, RpcMiddleware, HttpMiddleware> {
         let Self { inner } = self;
         EthereumAddOns::new(inner.with_payload_validator(payload_validator_builder))
     }
@@ -248,12 +256,24 @@ where
     pub fn with_rpc_middleware<T>(
         self,
         rpc_middleware: T,
-    ) -> EthereumAddOns<N, EthB, PVB, EB, EVB, T>
+    ) -> EthereumAddOns<N, EthB, PVB, EB, EVB, T, HttpMiddleware>
     where
         T: Send,
     {
         let Self { inner } = self;
         EthereumAddOns::new(inner.with_rpc_middleware(rpc_middleware))
+    }
+
+    /// Sets HTTP middleware
+    pub fn with_http_middleware<T>(
+        self,
+        http_middleware: T,
+    ) -> EthereumAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, T>
+    where
+        T: Send,
+    {
+        let Self { inner } = self;
+        EthereumAddOns::new(inner.with_http_middleware(http_middleware))
     }
 
     /// Sets the tokio runtime for the RPC servers.
@@ -265,8 +285,8 @@ where
     }
 }
 
-impl<N, EthB, PVB, EB, EVB, RpcMiddleware> NodeAddOns<N>
-    for EthereumAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>
+impl<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware> NodeAddOns<N>
+    for EthereumAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
 where
     N: FullNodeComponents<
         Types: NodeTypes<
@@ -283,6 +303,7 @@ where
     EthApiError: FromEvmError<N::Evm>,
     EvmFactoryFor<N::Evm>: EvmFactory<Tx = TxEnv>,
     RpcMiddleware: RethRpcMiddleware,
+    HttpMiddleware: RethHttpMiddleware<RpcMiddleware> + Send + Sync + Clone,
 {
     type Handle = RpcHandle<N, EthB::EthApi>;
 
@@ -319,7 +340,8 @@ where
     }
 }
 
-impl<N, EthB, PVB, EB, EVB> RethRpcAddOns<N> for EthereumAddOns<N, EthB, PVB, EB, EVB>
+impl<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware> RethRpcAddOns<N>
+    for EthereumAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
 where
     N: FullNodeComponents<
         Types: NodeTypes<
@@ -335,6 +357,8 @@ where
     EVB: EngineValidatorBuilder<N>,
     EthApiError: FromEvmError<N::Evm>,
     EvmFactoryFor<N::Evm>: EvmFactory<Tx = TxEnv>,
+    RpcMiddleware: RethRpcMiddleware,
+    HttpMiddleware: RethHttpMiddleware<RpcMiddleware> + Send + Sync + Clone,
 {
     type EthApi = EthB::EthApi;
 
@@ -343,8 +367,8 @@ where
     }
 }
 
-impl<N, EthB, PVB, EB, EVB, RpcMiddleware> EngineValidatorAddOn<N>
-    for EthereumAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>
+impl<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware> EngineValidatorAddOn<N>
+    for EthereumAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
 where
     N: FullNodeComponents<
         Types: NodeTypes<
@@ -360,7 +384,8 @@ where
     EVB: EngineValidatorBuilder<N>,
     EthApiError: FromEvmError<N::Evm>,
     EvmFactoryFor<N::Evm>: EvmFactory<Tx = TxEnv>,
-    RpcMiddleware: Send,
+    RpcMiddleware: RethRpcMiddleware,
+    HttpMiddleware: RethHttpMiddleware<RpcMiddleware> + Send + Sync + Clone,
 {
     type ValidatorBuilder = EVB;
 

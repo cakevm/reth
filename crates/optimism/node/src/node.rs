@@ -280,10 +280,11 @@ pub struct OpAddOns<
     EB = OpEngineApiBuilder<PVB>,
     EVB = BasicEngineValidatorBuilder<PVB>,
     RpcMiddleware = Identity,
+    HttpMiddleware = Identity,
 > {
     /// Rpc add-ons responsible for launching the RPC servers and instantiating the RPC handlers
     /// and eth-api.
-    pub rpc_add_ons: RpcAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>,
+    pub rpc_add_ons: RpcAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>,
     /// Data availability configuration for the OP builder.
     pub da_config: OpDAConfig,
     /// Sequencer client, configured to forward submitted transactions to sequencer of given OP
@@ -300,14 +301,15 @@ pub struct OpAddOns<
     min_suggested_priority_fee: u64,
 }
 
-impl<N, EthB, PVB, EB, EVB, RpcMiddleware> OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>
+impl<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
+    OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
 where
     N: FullNodeComponents,
     EthB: EthApiBuilder<N>,
 {
     /// Creates a new instance from components.
     pub const fn new(
-        rpc_add_ons: RpcAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>,
+        rpc_add_ons: RpcAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>,
         da_config: OpDAConfig,
         sequencer_url: Option<String>,
         sequencer_headers: Vec<String>,
@@ -355,7 +357,8 @@ where
     }
 }
 
-impl<N, EthB, PVB, EB, EVB, RpcMiddleware> OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>
+impl<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
+    OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, HttpMiddleware>
 where
     N: FullNodeComponents,
     EthB: EthApiBuilder<N>,
@@ -364,7 +367,7 @@ where
     pub fn with_engine_api<T>(
         self,
         engine_api_builder: T,
-    ) -> OpAddOns<N, EthB, PVB, T, EVB, RpcMiddleware> {
+    ) -> OpAddOns<N, EthB, PVB, T, EVB, RpcMiddleware, HttpMiddleware> {
         let Self {
             rpc_add_ons,
             da_config,
@@ -390,7 +393,7 @@ where
     pub fn with_payload_validator<T>(
         self,
         payload_validator_builder: T,
-    ) -> OpAddOns<N, EthB, T, EB, EVB, RpcMiddleware> {
+    ) -> OpAddOns<N, EthB, T, EB, EVB, RpcMiddleware, HttpMiddleware> {
         let Self {
             rpc_add_ons,
             da_config,
@@ -419,7 +422,10 @@ where
     /// layer, allowing you to intercept, modify, or enhance RPC request processing.
     ///
     /// See also [`RpcAddOns::with_rpc_middleware`].
-    pub fn with_rpc_middleware<T>(self, rpc_middleware: T) -> OpAddOns<N, EthB, PVB, EB, EVB, T> {
+    pub fn with_rpc_middleware<T>(
+        self,
+        rpc_middleware: T,
+    ) -> OpAddOns<N, EthB, PVB, EB, EVB, T, HttpMiddleware> {
         let Self {
             rpc_add_ons,
             da_config,
@@ -432,6 +438,38 @@ where
         } = self;
         OpAddOns::new(
             rpc_add_ons.with_rpc_middleware(rpc_middleware),
+            da_config,
+            sequencer_url,
+            sequencer_headers,
+            historical_rpc,
+            enable_tx_conditional,
+            min_suggested_priority_fee,
+        )
+    }
+
+    /// Sets the HTTP middleware stack for processing HTTP requests.
+    ///
+    /// This method configures a custom middleware stack that will be applied to all HTTP requests
+    /// before they reach the RPC service layer. This is useful for adding authentication,
+    /// rate limiting, logging, or other HTTP-level concerns.
+    ///
+    /// See also [`RpcAddOns::with_http_middleware`].
+    pub fn with_http_middleware<T>(
+        self,
+        http_middleware: T,
+    ) -> OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, T> {
+        let Self {
+            rpc_add_ons,
+            da_config,
+            sequencer_url,
+            sequencer_headers,
+            enable_tx_conditional,
+            min_suggested_priority_fee,
+            historical_rpc,
+            ..
+        } = self;
+        OpAddOns::new(
+            rpc_add_ons.with_http_middleware(http_middleware),
             da_config,
             sequencer_url,
             sequencer_headers,
@@ -463,7 +501,7 @@ where
 }
 
 impl<N, EthB, PVB, EB, EVB, Attrs, RpcMiddleware> NodeAddOns<N>
-    for OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>
+    for OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, Identity>
 where
     N: FullNodeComponents<
         Types: NodeTypes<
@@ -591,7 +629,7 @@ where
 }
 
 impl<N, EthB, PVB, EB, EVB, Attrs, RpcMiddleware> RethRpcAddOns<N>
-    for OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>
+    for OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, Identity>
 where
     N: FullNodeComponents<
         Types: NodeTypes<
@@ -623,14 +661,14 @@ where
 }
 
 impl<N, EthB, PVB, EB, EVB, RpcMiddleware> EngineValidatorAddOn<N>
-    for OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware>
+    for OpAddOns<N, EthB, PVB, EB, EVB, RpcMiddleware, Identity>
 where
     N: FullNodeComponents,
     EthB: EthApiBuilder<N>,
     PVB: Send,
     EB: EngineApiBuilder<N>,
     EVB: EngineValidatorBuilder<N>,
-    RpcMiddleware: Send,
+    RpcMiddleware: RethRpcMiddleware,
 {
     type ValidatorBuilder = EVB;
 
@@ -767,7 +805,7 @@ impl<NetworkT, RpcMiddleware> OpAddOnsBuilder<NetworkT, RpcMiddleware> {
     /// Builds an instance of [`OpAddOns`].
     pub fn build<N, PVB, EB, EVB>(
         self,
-    ) -> OpAddOns<N, OpEthApiBuilder<NetworkT>, PVB, EB, EVB, RpcMiddleware>
+    ) -> OpAddOns<N, OpEthApiBuilder<NetworkT>, PVB, EB, EVB, RpcMiddleware, Identity>
     where
         N: FullNodeComponents<Types: NodeTypes>,
         OpEthApiBuilder<NetworkT>: EthApiBuilder<N>,
@@ -789,7 +827,7 @@ impl<NetworkT, RpcMiddleware> OpAddOnsBuilder<NetworkT, RpcMiddleware> {
         } = self;
 
         OpAddOns::new(
-            RpcAddOns::new(
+            RpcAddOns::<N, _, _, _, _, _, Identity>::new(
                 OpEthApiBuilder::default()
                     .with_sequencer(sequencer_url.clone())
                     .with_sequencer_headers(sequencer_headers.clone())
