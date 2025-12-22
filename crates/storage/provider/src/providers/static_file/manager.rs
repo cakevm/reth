@@ -112,10 +112,32 @@ impl<N: NodePrimitives> StaticFileProvider<N> {
     /// Watching is recommended if the read-only provider is used on a directory that an active node
     /// instance is modifying.
     ///
+    /// Set `disable_jar_cache` to `true` to create fresh mmap handles on every access. This is
+    /// necessary for multi-process scenarios where one process is writing and another is reading,
+    /// as it ensures the reader always sees the latest data.
+    ///
     /// See also [`StaticFileProvider::watch_directory`].
     pub fn read_only(path: impl AsRef<Path>, watch_directory: bool) -> ProviderResult<Self> {
         let provider = Self::new(path, StaticFileAccess::RO)?;
+        if watch_directory {
+            provider.watch_directory();
+        }
+        Ok(provider)
+    }
 
+    /// Opens an existing [`StaticFileProvider`] in read-only mode without jar caching.
+    ///
+    /// This creates fresh mmap handles on every access instead of reusing cached ones,
+    /// ensuring the latest data written by another process is always visible.
+    /// Use this for read-only processes that need to see data written by a separate writer process.
+    ///
+    /// This has a performance cost as it bypasses the jar cache, but is necessary for
+    /// multi-process scenarios where one process is writing and another is reading.
+    pub fn read_only_uncached(
+        path: impl AsRef<Path>,
+        watch_directory: bool,
+    ) -> ProviderResult<Self> {
+        let provider = Self::new(path, StaticFileAccess::RO)?.with_jar_cache_disabled();
         if watch_directory {
             provider.watch_directory();
         }
@@ -264,6 +286,9 @@ pub struct StaticFileProviderInner<N> {
     blocks_per_file: u64,
     /// Write lock for when access is [`StaticFileAccess::RW`].
     _lock_file: Option<StorageLock>,
+    /// When true, skip jar caching and create fresh mmap on every access.
+    /// Useful for read-only processes that need to see the latest data written by another process.
+    disable_jar_cache: bool,
     /// Node primitives
     _pd: PhantomData<N>,
 }
@@ -289,6 +314,7 @@ impl<N: NodePrimitives> StaticFileProviderInner<N> {
             access,
             blocks_per_file: DEFAULT_BLOCKS_PER_STATIC_FILE,
             _lock_file,
+            disable_jar_cache: false,
             _pd: Default::default(),
         };
 
@@ -321,6 +347,21 @@ impl<N: NodePrimitives> StaticFileProvider<N> {
         let mut provider =
             Arc::try_unwrap(self.0).expect("should be called when initializing only");
         provider.metrics = Some(Arc::new(StaticFileProviderMetrics::default()));
+        Self(Arc::new(provider))
+    }
+
+    /// Disables jar caching, creating fresh mmap handles on every access.
+    ///
+    /// Use this for read-only processes that need to see data written by another process.
+    /// When enabled, each access will create a fresh memory-mapped file handle instead of
+    /// reusing a cached one, ensuring the latest data is always visible.
+    ///
+    /// This has a performance cost as it bypasses the jar cache, but is necessary for
+    /// multi-process scenarios where one process is writing and another is reading.
+    pub fn with_jar_cache_disabled(self) -> Self {
+        let mut provider =
+            Arc::try_unwrap(self.0).expect("should be called when initializing only");
+        provider.disable_jar_cache = true;
         Self(Arc::new(provider))
     }
 
@@ -537,9 +578,13 @@ impl<N: NodePrimitives> StaticFileProvider<N> {
         Ok(header)
     }
 
-    /// Given a segment and block range it returns a cached
-    /// [`StaticFileJarProvider`]. TODO(joshie): we should check the size and pop N if there's too
-    /// many.
+    /// Given a segment and block range it returns a [`StaticFileJarProvider`].
+    ///
+    /// If jar caching is enabled (the default), returns a cached jar or creates and caches a new
+    /// one. If jar caching is disabled (via [`Self::with_jar_cache_disabled`]), always creates
+    /// a fresh jar with a new mmap handle.
+    ///
+    /// TODO(joshie): we should check the size and pop N if there's too many.
     fn get_or_create_jar_provider(
         &self,
         segment: StaticFileSegment,
@@ -549,15 +594,28 @@ impl<N: NodePrimitives> StaticFileProvider<N> {
 
         // Avoid using `entry` directly to avoid a write lock in the common case.
         trace!(target: "provider::static_file", ?segment, ?fixed_block_range, "Getting provider");
-        let mut provider: StaticFileJarProvider<'_, N> = if let Some(jar) = self.map.get(&key) {
-            trace!(target: "provider::static_file", ?segment, ?fixed_block_range, "Jar found in cache");
-            jar.into()
-        } else {
-            trace!(target: "provider::static_file", ?segment, ?fixed_block_range, "Creating jar from scratch");
-            let path = self.path.join(segment.filename(fixed_block_range));
-            let jar = NippyJar::load(&path).map_err(ProviderError::other)?;
-            self.map.entry(key).insert(LoadedJar::new(jar)?).downgrade().into()
-        };
+
+        // Skip cache lookup if caching is disabled
+        if !self.disable_jar_cache {
+            if let Some(jar) = self.map.get(&key) {
+                trace!(target: "provider::static_file", ?segment, ?fixed_block_range, "Jar found in cache");
+                let mut provider: StaticFileJarProvider<'_, N> = jar.into();
+                if let Some(metrics) = &self.metrics {
+                    provider = provider.with_metrics(metrics.clone());
+                }
+                return Ok(provider);
+            }
+        }
+
+        // Create fresh jar (either cache miss or caching disabled)
+        trace!(target: "provider::static_file", ?segment, ?fixed_block_range, "Creating jar from scratch");
+        let path = self.path.join(segment.filename(fixed_block_range));
+        let jar = NippyJar::load(&path).map_err(ProviderError::other)?;
+
+        // Always insert into map to get a proper reference for StaticFileJarProvider.
+        // When caching is disabled, the entry will be replaced on next access anyway.
+        let mut provider: StaticFileJarProvider<'_, N> =
+            self.map.entry(key).insert(LoadedJar::new(jar)?).downgrade().into();
 
         if let Some(metrics) = &self.metrics {
             provider = provider.with_metrics(metrics.clone());

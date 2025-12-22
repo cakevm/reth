@@ -105,12 +105,24 @@ impl<N> ProviderFactoryBuilder<N> {
     where
         N: NodeTypes,
     {
-        let ReadOnlyConfig { db_dir, db_args, static_files_dir, watch_static_files } =
-            config.into();
+        let ReadOnlyConfig {
+            db_dir,
+            db_args,
+            static_files_dir,
+            watch_static_files,
+            disable_jar_cache,
+        } = config.into();
+
+        let static_file_provider = if disable_jar_cache {
+            StaticFileProvider::read_only_uncached(static_files_dir, watch_static_files)?
+        } else {
+            StaticFileProvider::read_only(static_files_dir, watch_static_files)?
+        };
+
         Ok(self
             .db(Arc::new(open_db_read_only(db_dir, db_args)?))
             .chainspec(chainspec)
-            .static_file(StaticFileProvider::read_only(static_files_dir, watch_static_files)?)
+            .static_file(static_file_provider)
             .build_provider_factory())
     }
 }
@@ -135,6 +147,12 @@ pub struct ReadOnlyConfig {
     pub static_files_dir: PathBuf,
     /// Whether the static files should be watched for changes.
     pub watch_static_files: bool,
+    /// Whether to disable jar caching for static files.
+    ///
+    /// When enabled, each static file access creates a fresh mmap handle instead of
+    /// reusing a cached one. This ensures the latest data is always visible, which
+    /// is necessary for multi-process scenarios where one process is writing.
+    pub disable_jar_cache: bool,
 }
 
 impl ReadOnlyConfig {
@@ -201,6 +219,7 @@ impl ReadOnlyConfig {
             db_dir: db_dir.as_ref().into(),
             db_args: Default::default(),
             watch_static_files: true,
+            disable_jar_cache: false,
         }
     }
 
@@ -234,6 +253,20 @@ impl ReadOnlyConfig {
     /// static files.
     pub const fn no_watch(mut self) -> Self {
         self.set_watch_static_files(false);
+        self
+    }
+
+    /// Disables static file jar caching.
+    ///
+    /// When enabled, each static file access creates a fresh mmap handle instead of
+    /// reusing a cached one. This ensures the latest data is always visible.
+    ///
+    /// Use this for read-only processes that need to see data written by another process
+    /// (e.g., an external process reading from a running node's database).
+    ///
+    /// This has a performance cost as it bypasses the jar cache.
+    pub const fn no_jar_cache(mut self) -> Self {
+        self.disable_jar_cache = true;
         self
     }
 }
