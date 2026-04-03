@@ -13922,3 +13922,178 @@ dependencies = [
  "cc",
  "pkg-config",
 ]
+
+[[patch.unused]]
+name = "alloy-consensus"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-contract"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-eips"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-evm"
+version = "0.29.2"
+source = "git+https://github.com/alloy-rs/evm.git?branch=alloy-2.0#f77e2416ae80d61641c6733c720c19f3f4fb8ac0"
+
+[[patch.unused]]
+name = "alloy-genesis"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-json-rpc"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-network"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-network-primitives"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-op-evm"
+version = "0.26.3"
+source = "git+https://github.com/foundry-rs/optimism?branch=alloy-2.0#a3632104e59345555fc0d566fa9fe9e4d52b1324"
+
+[[patch.unused]]
+name = "alloy-op-hardforks"
+version = "0.4.7"
+source = "git+https://github.com/foundry-rs/optimism?branch=alloy-2.0#a3632104e59345555fc0d566fa9fe9e4d52b1324"
+
+[[patch.unused]]
+name = "alloy-provider"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-pubsub"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-client"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-types"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-admin"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-anvil"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-beacon"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-debug"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-engine"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-eth"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-mev"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-trace"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-rpc-types-txpool"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-serde"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-signer"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-signer-local"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-transport"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-transport-http"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-transport-ipc"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "alloy-transport-ws"
+version = "2.0.0-rc.0"
+source = "git+https://github.com/alloy-rs/alloy?rev=ffb020e2845321145181089948efe14f074bccd6#ffb020e2845321145181089948efe14f074bccd6"
+
+[[patch.unused]]
+name = "op-alloy"
+version = "0.24.0"
+source = "git+https://github.com/foundry-rs/optimism?branch=alloy-2.0#a3632104e59345555fc0d566fa9fe9e4d52b1324"
+
+[[patch.unused]]
+name = "op-alloy-consensus"
+version = "0.24.0"
+source = "git+https://github.com/foundry-rs/optimism?branch=alloy-2.0#a3632104e59345555fc0d566fa9fe9e4d52b1324"
+
+[[patch.unused]]
+name = "op-alloy-network"
+version = "0.24.0"
+source = "git+https://github.com/foundry-rs/optimism?branch=alloy-2.0#a3632104e59345555fc0d566fa9fe9e4d52b1324"
+
+[[patch.unused]]
+name = "op-alloy-rpc-types"
+version = "0.24.0"
+source = "git+https://github.com/foundry-rs/optimism?branch=alloy-2.0#a3632104e59345555fc0d566fa9fe9e4d52b1324"
+
+[[patch.unused]]
+name = "revm-inspectors"
+version = "0.36.0"
+source = "git+https://github.com/paradigmxyz/revm-inspectors.git?branch=alloy-2.0#9b25643cf6656d078c642b678930ae7382c12147"
