@@ -3,6 +3,7 @@
 use crate::{
     CanonStateNotification, CanonStateNotificationSender, CanonStateNotifications,
     ChainInfoTracker, ComputedTrieData, DeferredTrieData, MemoryOverlayStateProvider,
+    StateTrieOverlayManager,
 };
 use alloy_consensus::{transaction::TransactionMeta, BlockHeader};
 use alloy_eips::{BlockHashOrNumber, BlockNumHash};
@@ -18,7 +19,11 @@ use reth_primitives_traits::{
 };
 use reth_storage_api::StateProviderBox;
 use reth_trie::{updates::TrieUpdatesSorted, HashedPostStateSorted, LazyTrieData, SortedTrieData};
-use std::{collections::BTreeMap, sync::Arc, time::Instant};
+use std::{
+    collections::BTreeMap,
+    sync::{Arc, OnceLock},
+    time::Instant,
+};
 use tokio::sync::{broadcast, watch};
 
 /// Size of the broadcast channel used to notify canonical state events.
@@ -147,6 +152,14 @@ pub(crate) struct CanonicalInMemoryStateInner<N: NodePrimitives> {
     pub(crate) in_memory_state: InMemoryState<N>,
     /// A broadcast stream that emits events when the canonical chain is updated.
     pub(crate) canon_state_notification_sender: CanonStateNotificationSender<N>,
+    /// The engine's flattened state trie overlay manager, installed once when the engine starts.
+    ///
+    /// The engine owns and drives this manager from its tree state; a clone of the handle is
+    /// installed here so holders of this canonical in-memory state (e.g. out-of-tree block
+    /// builders or custom payload validators) can resolve in-memory parent overlays against
+    /// the same engine-synced instance instead of reconstructing their own. It is empty until
+    /// the engine installs it, and remains empty for nodes that do not run the engine tree.
+    pub(crate) state_trie_overlays: OnceLock<StateTrieOverlayManager<N>>,
 }
 
 impl<N: NodePrimitives> CanonicalInMemoryStateInner<N> {
@@ -200,6 +213,7 @@ impl<N: NodePrimitives> CanonicalInMemoryState<N> {
                 chain_info_tracker,
                 in_memory_state,
                 canon_state_notification_sender,
+                state_trie_overlays: OnceLock::new(),
             }),
         }
     }
@@ -224,6 +238,7 @@ impl<N: NodePrimitives> CanonicalInMemoryState<N> {
             chain_info_tracker,
             in_memory_state,
             canon_state_notification_sender,
+            state_trie_overlays: OnceLock::new(),
         };
 
         Self { inner: Arc::new(inner) }
@@ -530,6 +545,25 @@ impl<N: NodePrimitives> CanonicalInMemoryState<N> {
     /// Attempts to send a new [`CanonStateNotification`] to all active Receiver handles.
     pub fn notify_canon_state(&self, event: CanonStateNotification<N>) {
         self.inner.canon_state_notification_sender.send(event).ok();
+    }
+
+    /// Installs the engine's [`StateTrieOverlayManager`] so it can be observed through this
+    /// canonical in-memory state.
+    ///
+    /// This is intended to be called once when the engine starts. Subsequent calls are ignored, so
+    /// the first installed manager remains the single source of truth for its lifetime.
+    pub fn install_state_trie_overlay_manager(&self, manager: StateTrieOverlayManager<N>) {
+        let _ = self.inner.state_trie_overlays.set(manager);
+    }
+
+    /// Returns a handle to the engine's [`StateTrieOverlayManager`], if one has been installed.
+    ///
+    /// The returned handle shares its block graph and overlay cache with the engine's manager, so
+    /// callers observe the same in-memory overlays the engine maintains. Returns `None` before the
+    /// engine has installed it (and for nodes that do not run the engine tree), in which case
+    /// callers should fall back to resolving state without an in-memory overlay.
+    pub fn state_trie_overlay_manager(&self) -> Option<StateTrieOverlayManager<N>> {
+        self.inner.state_trie_overlays.get().cloned()
     }
 
     /// Return state provider with reference to in-memory blocks that overlay database state.
@@ -1292,6 +1326,39 @@ mod tests {
         );
 
         assert_eq!(state.inner.in_memory_state.block_count(), 1);
+    }
+
+    #[test]
+    fn test_install_and_share_state_trie_overlay_manager() {
+        let state: CanonicalInMemoryState = CanonicalInMemoryState::empty();
+
+        // No manager until the engine installs one.
+        assert!(state.state_trie_overlay_manager().is_none());
+
+        // The engine owns and drives the manager; a clone of its handle is installed here.
+        let engine_manager = StateTrieOverlayManager::<EthPrimitives>::default();
+        state.install_state_trie_overlay_manager(engine_manager.clone());
+        let installed = state.state_trie_overlay_manager().expect("manager installed");
+
+        // Blocks inserted through the engine's handle are observed through the installed handle,
+        // because both share the same underlying block graph.
+        let blocks: Vec<_> = TestBlockBuilder::eth().get_executed_blocks(1..3).collect();
+        for block in &blocks {
+            engine_manager.insert_block(block.clone());
+        }
+        let anchor = blocks[0].recovered_block().parent_hash();
+        assert_eq!(
+            installed.anchor_for_parent(blocks[1].recovered_block().hash(), anchor),
+            Some(anchor)
+        );
+
+        // Installing again is a no-op: the first handle stays the single source of truth.
+        state.install_state_trie_overlay_manager(StateTrieOverlayManager::default());
+        let after = state.state_trie_overlay_manager().expect("manager still installed");
+        assert_eq!(
+            after.anchor_for_parent(blocks[1].recovered_block().hash(), anchor),
+            Some(anchor)
+        );
     }
 
     #[test]

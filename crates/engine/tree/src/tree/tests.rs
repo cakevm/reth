@@ -278,13 +278,15 @@ impl TestHarness {
             current_canonical_head: blocks.last().unwrap().recovered_block().num_hash(),
             parent_to_child,
             engine_kind: EngineApiKind::Ethereum,
-            state_trie_overlays,
+            state_trie_overlays: state_trie_overlays.clone(),
         };
 
         let last_executed_block = blocks.last().unwrap().clone();
         let pending = Some(BlockState::new(last_executed_block));
-        self.tree.canonical_in_memory_state =
+        let canonical_in_memory_state =
             CanonicalInMemoryState::new(state_by_hash, hash_by_number, pending, None, None);
+        canonical_in_memory_state.install_state_trie_overlay_manager(state_trie_overlays);
+        self.tree.canonical_in_memory_state = canonical_in_memory_state;
 
         self.blocks = blocks.clone();
 

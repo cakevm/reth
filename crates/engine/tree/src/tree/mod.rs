@@ -453,6 +453,11 @@ where
             runtime.state_trie_overlay_worker_pool(),
         );
 
+        // Expose the engine's overlay manager through the canonical in-memory state so out-of-tree
+        // consumers can resolve in-memory parent overlays against the same engine-synced instance.
+        canonical_in_memory_state
+            .install_state_trie_overlay_manager(state.tree_state.state_trie_overlays.clone());
+
         let task = Self::new(
             provider,
             consensus,
