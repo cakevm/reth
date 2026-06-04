@@ -160,14 +160,11 @@ impl<N: NodePrimitives> StateTrieOverlayManager<N> {
 
         #[cfg(feature = "rayon")]
         {
-            let parent_span = span;
             for anchor_hash in cached_parent_overlays {
                 let manager = <Self as Clone>::clone(self);
-                let parent_span = parent_span.clone();
                 worker_pool.spawn(move || {
                     let _span = tracing::trace_span!(
                         target: "chain_state::state_trie_overlay",
-                        parent: parent_span,
                         "precompute_state_trie_overlay",
                         tip_hash = %hash,
                         anchor_hash = %anchor_hash,
