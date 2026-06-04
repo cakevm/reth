@@ -19,9 +19,7 @@ use alloy_rpc_types_engine::{
     ExecutionData, ExecutionPayloadSidecar, ExecutionPayloadV1, ForkchoiceState,
 };
 use assert_matches::assert_matches;
-use reth_chain_state::{
-    test_utils::TestBlockBuilder, BlockState, ComputedTrieData, StateTrieOverlayManager,
-};
+use reth_chain_state::{test_utils::TestBlockBuilder, BlockState, ComputedTrieData};
 use reth_chainspec::{ChainSpec, HOLESKY, MAINNET};
 use reth_engine_primitives::{EngineApiValidator, ForkchoiceStatus, NoopInvalidBlockHook};
 use reth_ethereum_consensus::EthBeaconConsensus;
@@ -192,15 +190,18 @@ impl TestHarness {
 
         let header = chain_spec.genesis_header().clone();
         let header = SealedHeader::seal_slow(header);
+        let canonical_in_memory_state =
+            CanonicalInMemoryState::with_head(header.clone(), None, None);
         let engine_api_tree_state = EngineApiTreeState::new(
             10,
             10,
             tree_config.invalid_header_hit_eviction_threshold(),
             header.num_hash(),
             EngineApiKind::Ethereum,
-            runtime.state_trie_overlay_worker_pool(),
+            canonical_in_memory_state
+                .state_trie_overlay_manager()
+                .with_worker_pool(runtime.state_trie_overlay_worker_pool()),
         );
-        let canonical_in_memory_state = CanonicalInMemoryState::with_head(header, None, None);
 
         let (to_payload_service, _payload_command_rx) = unbounded_channel();
         let payload_builder = PayloadBuilderHandle::new(to_payload_service);
@@ -267,7 +268,14 @@ impl TestHarness {
             parent_hash = hash;
         }
 
-        let state_trie_overlays = StateTrieOverlayManager::default();
+        let last_executed_block = blocks.last().unwrap().clone();
+        let pending = Some(BlockState::new(last_executed_block));
+        let canonical_in_memory_state =
+            CanonicalInMemoryState::new(state_by_hash, hash_by_number, pending, None, None);
+
+        // Drive the manager owned by the canonical in-memory state so the tree state and canonical
+        // in-memory state share a single overlay manager, as they do in production.
+        let state_trie_overlays = canonical_in_memory_state.state_trie_overlay_manager();
         for block in &blocks {
             state_trie_overlays.insert_block(block.clone());
         }
@@ -278,14 +286,8 @@ impl TestHarness {
             current_canonical_head: blocks.last().unwrap().recovered_block().num_hash(),
             parent_to_child,
             engine_kind: EngineApiKind::Ethereum,
-            state_trie_overlays: state_trie_overlays.clone(),
+            state_trie_overlays,
         };
-
-        let last_executed_block = blocks.last().unwrap().clone();
-        let pending = Some(BlockState::new(last_executed_block));
-        let canonical_in_memory_state =
-            CanonicalInMemoryState::new(state_by_hash, hash_by_number, pending, None, None);
-        canonical_in_memory_state.install_state_trie_overlay_manager(state_trie_overlays);
         self.tree.canonical_in_memory_state = canonical_in_memory_state;
 
         self.blocks = blocks.clone();

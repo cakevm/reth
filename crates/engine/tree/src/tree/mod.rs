@@ -36,7 +36,7 @@ use reth_provider::{
 };
 use reth_revm::database::StateProviderDatabase;
 use reth_stages_api::ControlFlow;
-use reth_tasks::{spawn_os_thread, utils::increase_thread_priority, WorkerPool};
+use reth_tasks::{spawn_os_thread, utils::increase_thread_priority};
 use reth_trie_db::ChangesetCache;
 use revm::interpreter::debug_unreachable;
 use state::TreeState;
@@ -156,7 +156,7 @@ impl<N: NodePrimitives> EngineApiTreeState<N> {
         invalid_header_hit_eviction_threshold: u8,
         canonical_block: BlockNumHash,
         engine_kind: EngineApiKind,
-        state_trie_overlay_worker_pool: Arc<WorkerPool>,
+        state_trie_overlays: StateTrieOverlayManager<N>,
     ) -> Self {
         Self {
             invalid_headers: InvalidHeaderCache::new(
@@ -164,11 +164,7 @@ impl<N: NodePrimitives> EngineApiTreeState<N> {
                 invalid_header_hit_eviction_threshold,
             ),
             buffer: BlockBuffer::new(block_buffer_limit),
-            tree_state: TreeState::new(
-                canonical_block,
-                engine_kind,
-                StateTrieOverlayManager::new(state_trie_overlay_worker_pool),
-            ),
+            tree_state: TreeState::new(canonical_block, engine_kind, state_trie_overlays),
             forkchoice_state_tracker: ForkchoiceStateTracker::default(),
         }
     }
@@ -444,19 +440,20 @@ where
         };
 
         let (tx, outgoing) = unbounded_channel();
+        // Drive the manager owned by the canonical in-memory state, attaching the worker pool. The
+        // handle shares its maps with the one exposed to consumers, so there is one source of
+        // truth.
+        let state_trie_overlays = canonical_in_memory_state
+            .state_trie_overlay_manager()
+            .with_worker_pool(runtime.state_trie_overlay_worker_pool());
         let state = EngineApiTreeState::new(
             config.block_buffer_limit(),
             config.max_invalid_header_cache_length(),
             config.invalid_header_hit_eviction_threshold(),
             header.num_hash(),
             kind,
-            runtime.state_trie_overlay_worker_pool(),
+            state_trie_overlays,
         );
-
-        // Expose the engine's overlay manager through the canonical in-memory state so out-of-tree
-        // consumers can resolve in-memory parent overlays against the same engine-synced instance.
-        canonical_in_memory_state
-            .install_state_trie_overlay_manager(state.tree_state.state_trie_overlays.clone());
 
         let task = Self::new(
             provider,

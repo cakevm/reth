@@ -78,6 +78,24 @@ impl<N: NodePrimitives> StateTrieOverlayManager<N> {
         }
     }
 
+    /// Returns a handle to this same manager that drives background precomputation on the given
+    /// worker pool.
+    ///
+    /// This does not create a new manager: the returned handle shares the underlying block graph
+    /// and overlay cache with `self` (both are `Arc`-backed), so inserts and overlays performed
+    /// through either handle are visible to both. Only the worker pool differs.
+    ///
+    /// This split is intentional. The owner of the manager (such as
+    /// [`crate::CanonicalInMemoryState`]) holds a pool-free handle and hands it out to read-only
+    /// consumers, while the engine takes a pool-backed handle via this method to drive validation.
+    /// Keeping the consumer-facing handle pool-free means consumer overlay computation falls back
+    /// to the global rayon pool instead of enqueuing onto — and potentially stalling — the
+    /// engine's dedicated overlay worker pool.
+    #[cfg(feature = "rayon")]
+    pub fn with_worker_pool(self, worker_pool: Arc<WorkerPool>) -> Self {
+        Self { worker_pool: Some(worker_pool), ..self }
+    }
+
     /// Inserts an executed in-memory block into the state trie overlay manager.
     #[tracing::instrument(
         level = "trace",

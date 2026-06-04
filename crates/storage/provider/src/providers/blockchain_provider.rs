@@ -1,7 +1,7 @@
 use crate::{
     providers::{
-        ConsistentProvider, ProviderNodeTypes, RocksDBProvider, StaticFileProvider,
-        StaticFileProviderRWRefMut,
+        ConsistentProvider, OverlayBuilder, OverlayStateProviderFactory, ProviderNodeTypes,
+        RocksDBProvider, StaticFileProvider, StaticFileProviderRWRefMut,
     },
     AccountReader, BalProvider, BalStoreHandle, BlockHashReader, BlockIdReader, BlockNumReader,
     BlockReader, BlockReaderIdExt, BlockSource, CanonChainTracker, CanonStateNotifications,
@@ -120,6 +120,26 @@ impl<N: ProviderNodeTypes> BlockchainProvider<N> {
     /// Gets a clone of `canonical_in_memory_state`.
     pub fn canonical_in_memory_state(&self) -> CanonicalInMemoryState<N::Primitives> {
         self.canonical_in_memory_state.clone()
+    }
+
+    /// Returns a factory for state providers that overlay in-memory state up to `parent_hash`, for
+    /// computing state roots and proofs on an unpersisted parent such as the canonical tip.
+    ///
+    /// The factory reads database state at the persisted tip and applies the flattened in-memory
+    /// overlay from the [`StateTrieOverlayManager`](reth_chain_state::StateTrieOverlayManager) the
+    /// engine keeps in sync. Resolving against this shared manager, rather than one rebuilt from a
+    /// snapshot, avoids skewing the overlay against the live database tip — a skew that produces a
+    /// silently wrong state root. On nodes without the engine tree the manager is empty and the
+    /// factory resolves against the database tip only.
+    pub fn overlay_state_provider_factory(
+        &self,
+        parent_hash: B256,
+    ) -> OverlayStateProviderFactory<ProviderFactory<N>, N::Primitives> {
+        let overlay_builder = OverlayBuilder::new(parent_hash, self.database.changeset_cache())
+            .with_state_trie_overlay_manager(
+                self.canonical_in_memory_state.state_trie_overlay_manager(),
+            );
+        OverlayStateProviderFactory::new(self.database.clone(), overlay_builder)
     }
 
     /// Returns a provider with a created `DbTx` inside, which allows fetching data from the

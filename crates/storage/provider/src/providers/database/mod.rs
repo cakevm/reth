@@ -198,6 +198,11 @@ impl<N: NodeTypesWithDB> ProviderFactory<N> {
         self
     }
 
+    /// Returns a handle to the changeset cache used by this factory.
+    pub fn changeset_cache(&self) -> ChangesetCache {
+        self.changeset_cache.clone()
+    }
+
     /// Sets the minimum pruning distance for an existing [`ProviderFactory`].
     ///
     /// This controls the minimum distance from tip required before pruning can occur.
